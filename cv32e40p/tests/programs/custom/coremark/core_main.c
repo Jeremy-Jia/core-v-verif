@@ -368,7 +368,7 @@ for (i = 0; i < MULTITHREAD; i++)
     if (time_in_secs(total_time) > 0)
         ee_printf("Iterations/Sec   : %d\n",
                   default_num_contexts * results[0].iterations
-                      / time_in_secs(total_time));
+                      / total_time*1000000);
 #endif
     if (time_in_secs(total_time) < 10)
     {

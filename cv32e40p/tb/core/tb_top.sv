@@ -58,6 +58,10 @@ module tb_top
             $dumpfile("riscy_tb.vcd");
             $dumpvars(0, tb_top);
         end
+        if ($test$plusargs("fsdb")) begin
+            $fsdbDumpfile("riscy_tb.fsdb");
+            $fsdbDumpvars(0, tb_top);
+        end
     end
 
     // we either load the provided firmware or execute a small test program that

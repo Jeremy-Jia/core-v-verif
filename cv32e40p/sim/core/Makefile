@@ -119,10 +119,10 @@ VSIM_DEBUG_FLAGS  = -debugdb
 VSIM_GUI_FLAGS    = -gui -debugdb
 VSIM_SCRIPT_DIR	  = ../tools/vsim
 VSIM_SCRIPT       = $(VSIM_SCRIPT_DIR)/vsim.tcl
-
+# /home/synopsys/vcs-mx/O-2018.09-SP2
 # vcs configuration (hopelessly out of date)
-VCS_VERSION             = O-2018.09-SP1-1
-VCS_HOME                = /opt/synopsys/vcs-mx/$(VCS_VERSION)
+VCS_VERSION             = O-2018.09-SP2
+VCS_HOME                = /home/synopsys/vcs-mx/$(VCS_VERSION)
 VCS                     = vcs
 VCS_FLAGS              ?= # user defined
 ALL_VCS_FLAGS           = $(VCS_FLAGS)
@@ -527,17 +527,21 @@ verilate-clean: tc-clean
 # Synopsys VCS
 
 vcsify: CV_CORE_pkg tbsrc_pkg tbsrc
-	$(VCS) +vc -sverilog -race=all -ignore unique_checks -full64 \
+	$(VCS) +vc -ntb_opts uvm -fsdb -LDFLAGS -Wl,--no-as-needed -sverilog -race=all -ignore unique_checks -full64 \
 		-timescale=1ns/1ps \
 		-assert svaext \
 		-CC "-I$(VCS_HOME)/include -O3 -march=native" $(VCS_FLAGS) \
-		-f $(MAKE_DIR)/$(CV_CORE_MANIFEST) \
+		-f $(CV_CORE_MANIFEST) \
 		$(TBSRC_PKG) $(TBSRC)
 
 RTLSRC_TB_TOP	:= $(basename $(notdir $(TBSRC_TOP)))
 
+SIMV_FLAGS := 
+
 vcs-run: vcsify
-	$(SIMV) $(ALL_VCS_FLAGS) -ucli -do $(VCS_SCRIPT)
+	$(SIMV) $(ALL_VCS_FLAGS) $(SIMV_FLAGS)
+# vcs-run: vcsify
+# 	$(SIMV) $(ALL_VCS_FLAGS) -ucli -do $(VCS_SCRIPT)
 
 vcs-run-gui: vcsify
 	$(SIMV) $(ALL_VCS_FLAGS) -gui -do $(VCS_SCRIPT_GUI)
@@ -548,9 +552,9 @@ vcs-hello-world: ALL_VCS_FLAGS += +firmware=$(CUSTOM)/hello-world.hex
 vcs-hello-world: vcs-run
 
 .PHONY: vcs-custom
-vcs-custom: vcsify $(CUSTOM)/$(CUSTOM_PROG).hex
-vcs-custom: ALL_VCS_FLAGS += +firmware=$(CUSTOM)/$(CUSTOM_PROG).hex
-vcs-custom: vcs-run
+vcs-test: vcsify $(TEST_PROGRAM_RELPATH)/$(TEST)/$(TEST).hex
+vcs-test: ALL_VCS_FLAGS += +firmware=$(TEST_PROGRAM_RELPATH)/$(TEST)/$(TEST).hex
+vcs-test: vcs-run
 
 .PHONY: vcs-cv32_riscv_tests
 vcs-cv32_riscv_tests: vcsify $(CV32_RISCV_TESTS_FIRMWARE)/cv32_riscv_tests_firmware.hex
@@ -596,6 +600,9 @@ vcs-unit-test-gui: vcs-run-gui
 
 vcs-clean:
 	rm -rf simv* *.daidir *.vpd *.db csrc ucli.key vc_hdrs.h
+
+verdi:
+	verdi -sverilog -f flist  -ssy -ssv -ssf riscy_tb.fsdb
 
 ###############################################################################
 # Aldec Riviera-PRO
